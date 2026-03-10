@@ -99,6 +99,16 @@ public class Freerouting {
 
     routingJob.routerSettings = settingsMerger.merge();
     routingJob.drcSettings = Freerouting.globalSettings.drcSettings.clone();
+
+    // CLI-mode specific defaults: reduce max passes and timeout for reasonable termination
+    if (routingJob.routerSettings.maxPasses > 50) {
+      routingJob.routerSettings.maxPasses = 50;
+    }
+    if (routingJob.routerSettings.jobTimeoutString == null ||
+        routingJob.routerSettings.jobTimeoutString.equals("12:00:00")) {
+      routingJob.routerSettings.jobTimeoutString = "5:00";
+    }
+
     routingJob.state = RoutingJobState.READY_TO_START;
 
     // Wait for the RoutingJobScheduler to do its work
@@ -387,7 +397,7 @@ public class Freerouting {
     boolean fileLoggingEnabled = true;
     boolean consoleLoggingEnabled = true;
     String fileLoggingLevel = "DEBUG";
-    String consoleLoggingLevel = "INFO";
+    String consoleLoggingLevel = "WARN";  // Reduced verbosity for CLI mode
     String fileLoggingLocation = null;
     String fileLoggingPattern = null;
 
