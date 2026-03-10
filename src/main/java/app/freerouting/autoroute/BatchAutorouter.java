@@ -51,6 +51,14 @@ public class BatchAutorouter extends NamedAlgorithm {
   // process should stop despite not all items are routed
   private static final int STOP_AT_PASS_MODULO = 4;
 
+  // Early stopping constants for CLI mode
+  private static final int CLI_MAX_PASSES_WITHOUT_IMPROVEMENT = 10;
+  private static final float CLI_SIGNIFICANT_IMPROVEMENT_THRESHOLD = 0.5f;
+
+  // Early stopping state
+  private float bestScoreSoFar = Float.NEGATIVE_INFINITY;
+  private int passesWithoutImprovement = 0;
+
   private final boolean remove_unconnected_vias;
   private final AutorouteControl.ExpansionCostFactor[] trace_cost_arr;
   private final boolean retain_autoroute_database;
@@ -657,6 +665,39 @@ public class BatchAutorouter extends NamedAlgorithm {
         passCompletedMessage += ".";
       }
       job.logInfo(passCompletedMessage);
+
+      // Early stopping for CLI mode: stop if no significant improvement after N passes
+      boolean isCliMode = job != null && !job.routerSettings.isGuiMode();
+      if (isCliMode) {
+        // Calculate routed and total connections
+        int routed = boardStatisticsAfter.connections.totalCount - boardStatisticsAfter.connections.incompleteCount;
+        int total = boardStatisticsAfter.connections.totalCount;
+        long elapsedMs = java.time.Duration.between(this.sessionStartTime, Instant.now()).toMillis();
+
+        // Console progress output for CLI
+        System.out.println(String.format("[Pass %d/%d] %d/%d connections routed, %d traces, %d vias, %.1fs elapsed",
+            currentPass, this.settings.maxPasses, routed, total,
+            boardStatisticsAfter.traces.totalCount, boardStatisticsAfter.vias.totalCount, elapsedMs / 1000.0));
+
+        // Fire progress event for listeners
+        fireProgressEvent(new app.freerouting.autoroute.events.ProgressEvent(
+            this, currentPass, this.settings.maxPasses, routed, total,
+            boardStatisticsAfter.traces.totalCount, boardStatisticsAfter.vias.totalCount,
+            elapsedMs, "routing"));
+
+        // Early stopping logic
+        if (boardScoreAfter > bestScoreSoFar + CLI_SIGNIFICANT_IMPROVEMENT_THRESHOLD) {
+          bestScoreSoFar = boardScoreAfter;
+          passesWithoutImprovement = 0;
+        } else {
+          passesWithoutImprovement++;
+        }
+
+        if (passesWithoutImprovement >= CLI_MAX_PASSES_WITHOUT_IMPROVEMENT && currentPass >= STOP_AT_PASS_MINIMUM) {
+          job.logInfo("Early stopping: no significant improvement for " + passesWithoutImprovement + " passes");
+          thread.request_stop_auto_router();
+        }
+      }
 
       if (this.settings.save_intermediate_stages) {
         fireBoardSnapshotEvent(this.board);
