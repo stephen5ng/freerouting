@@ -164,19 +164,40 @@ def manifestAttributes = [
         'Implementation-Version': project.version
 ].asImmutable()
 
-jar {
+// Thin JAR (for development/plugins) - no dependencies bundled
+tasks.register('thinJar', Jar) {
+    archiveClassifier = 'thin'
     manifest {
-        attributes manifestAttributes
+        attributes manifestAttributes + ["Main-Class": project.mainClassName]
     }
 }
 
+// Default jar task produces the executable JAR (with all dependencies)
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    // Include all runtime dependencies
+    from {
+        configurations.runtimeClasspath.collect { zipTree(it) }
+    } {
+        exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+    }
+
+    from files(sourceSets.main.output)
+
+    manifest {
+        attributes manifestAttributes + ['Main-Class': project.mainClassName]
+    }
+}
+
+// Legacy task name - now just an alias for the default jar
 tasks.register('executableJar', Jar) {
+    dependsOn jar
     archiveBaseName = 'freerouting-current'
     archiveClassifier = 'executable'
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    // Exclude signature files from dependencies
     from {
         configurations.runtimeClasspath.collect { zipTree(it) }
     } {
