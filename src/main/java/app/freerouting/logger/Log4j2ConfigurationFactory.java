@@ -45,7 +45,7 @@ public class Log4j2ConfigurationFactory extends ConfigurationFactory {
 
         // Read configuration from system properties
         boolean consoleEnabled = getBooleanProperty("freerouting.logging.console.enabled", true);
-        String consoleLevel = getProperty("freerouting.logging.console.level", "INFO");
+        String consoleLevel = getProperty("freerouting.logging.console.level", "WARN");
 
         boolean fileEnabled = getBooleanProperty("freerouting.logging.file.enabled", true);
         String fileLevel = getProperty("freerouting.logging.file.level", "DEBUG");
