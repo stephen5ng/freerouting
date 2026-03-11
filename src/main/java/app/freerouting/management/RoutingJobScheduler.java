@@ -85,6 +85,15 @@ public class RoutingJobScheduler {
                     // Apply the final merged settings to the job and optimize them for the board
                     job.routerSettings = settingsMerger.merge();
 
+                    // CLI-mode specific defaults: reduce max passes and timeout for reasonable termination
+                    if (job.routerSettings.maxPasses > 50) {
+                        job.routerSettings.maxPasses = 50;
+                    }
+                    if (job.routerSettings.jobTimeoutString == null ||
+                        job.routerSettings.jobTimeoutString.equals("12:00:00")) {
+                        job.routerSettings.jobTimeoutString = "5:00";
+                    }
+
                     // Ensure layer arrays are sized correctly before applying board-specific optimizations
                     int boardLayerCount = job.board.get_layer_count();
                     if (job.routerSettings.getLayerCount() != boardLayerCount) {
