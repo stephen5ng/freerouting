@@ -84,6 +84,12 @@ public class RoutingJobScheduler {
 
                     // Apply the final merged settings to the job and optimize them for the board
                     job.routerSettings = settingsMerger.merge();
+
+                    // Ensure layer arrays are sized correctly before applying board-specific optimizations
+                    int boardLayerCount = job.board.get_layer_count();
+                    if (job.routerSettings.getLayerCount() != boardLayerCount) {
+                        job.routerSettings.setLayerCount(boardLayerCount);
+                    }
                     job.routerSettings.applyBoardSpecificOptimizations(job.board);
 
                     // Load SES file if specified
