@@ -4,6 +4,8 @@ import app.freerouting.autoroute.events.BoardSnapshotEvent;
 import app.freerouting.autoroute.events.BoardSnapshotEventListener;
 import app.freerouting.autoroute.events.BoardUpdatedEvent;
 import app.freerouting.autoroute.events.BoardUpdatedEventListener;
+import app.freerouting.autoroute.events.ProgressEvent;
+import app.freerouting.autoroute.events.ProgressEventListener;
 import app.freerouting.autoroute.events.TaskStateChangedEvent;
 import app.freerouting.autoroute.events.TaskStateChangedEventListener;
 import app.freerouting.board.RoutingBoard;
@@ -24,6 +26,7 @@ public abstract class NamedAlgorithm implements Serializable {
   protected final transient List<BoardSnapshotEventListener> boardSnapshotEventListeners = new ArrayList<>();
   protected final transient List<BoardUpdatedEventListener> boardUpdatedEventListeners = new ArrayList<>();
   protected final transient List<TaskStateChangedEventListener> taskStateChangedEventListeners = new ArrayList<>();
+  protected final transient List<ProgressEventListener> progressEventListeners = new ArrayList<>();
   protected final RouterSettings settings;
   // The routing board.
   // TODO: This should be a transient field, but it is not possible to serialize the board with the JSON serializer.
@@ -105,6 +108,19 @@ public abstract class NamedAlgorithm implements Serializable {
   public void fireTaskStateChangedEvent(TaskStateChangedEvent event) {
     for (TaskStateChangedEventListener listener : taskStateChangedEventListeners) {
       listener.onTaskStateChangedEvent(event);
+    }
+  }
+
+  public void addProgressEventListener(ProgressEventListener listener) {
+    progressEventListeners.add(listener);
+  }
+
+  /**
+   * Fires a progress event to update listeners on routing progress.
+   */
+  public void fireProgressEvent(ProgressEvent event) {
+    for (ProgressEventListener listener : progressEventListeners) {
+      listener.onProgressEvent(event);
     }
   }
 }

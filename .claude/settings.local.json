@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew test:*)",
+      "Bash(./gradlew assemble:*)",
+      "Bash(./gradlew compileJava:*)",
+      "Bash(./gradlew shadowJar:*)",
+      "Bash(./gradlew tasks:*)",
+      "Bash(./gradlew jar:*)",
+      "Bash(ls:*)",
+      "Bash(java:*)",
+      "Bash(pkill:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(./gradlew build:*)",
+      "Bash(unzip:*)",
+      "Bash(./gradlew clean:*)",
+      "Bash(./gradlew cleanTest:*)",
+      "Bash(./gradlew:*)",
+      "WebFetch(domain:services.gradle.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:release-assets.githubusercontent.com)",
+      "WebFetch(domain:formulae.brew.sh)",
+      "WebFetch(domain:eu-central-1-1.aws.cloud2.influxdata.com)",
+      "Bash(JAVA_HOME=/opt/homebrew/opt/openjdk gradle:*)",
+      "Bash(JAVA_HOME=/opt/homebrew/opt/openjdk strings:*)",
+      "Bash($JAVA_HOME/bin/jar xf:*)",
+      "Bash(JAVA_HOME=/opt/homebrew/opt/openjdk)",
+      "Bash(mkdir -p .temp-check)",
+      "Read(//Users/stephenng/programming/**)",
+      "Bash(rm -rf .temp-check)",
+      "Bash(JAVA_HOME=/opt/homebrew/opt/openjdk /opt/homebrew/Cellar/gradle/9.4.0/bin/jar xf:*)",
+      "Bash(/opt/homebrew/opt/openjdk/bin/jar tf:*)",
+      "Bash($JAVA_HOME/bin/java:*)",
+      "Bash(/opt/homebrew/opt/openjdk/bin/java:*)",
+      "Bash(xargs -I{} git rev-parse {}^)"
+    ]
+  },
+  "sandbox": {
+    "enabled": false,
+    "autoAllowBashIfSandboxed": false
+  }
+}

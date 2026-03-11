@@ -1,0 +1,8 @@
+{
+  "gui": {
+    "enabled": false
+  },
+  "updates": {
+    "check": false
+  }
+}

@@ -666,37 +666,37 @@ public class BatchAutorouter extends NamedAlgorithm {
       }
       job.logInfo(passCompletedMessage);
 
-      // Early stopping for CLI mode: stop if no significant improvement after N passes
-      boolean isCliMode = job != null && !job.routerSettings.isGuiMode();
-      if (isCliMode) {
-        // Calculate routed and total connections
-        int routed = boardStatisticsAfter.connections.totalCount - boardStatisticsAfter.connections.incompleteCount;
-        int total = boardStatisticsAfter.connections.totalCount;
-        long elapsedMs = java.time.Duration.between(this.sessionStartTime, Instant.now()).toMillis();
+      // Calculate routed and total connections for progress reporting
+      int totalConnections = boardStatisticsAfter.connections.maximumCount != null
+          ? boardStatisticsAfter.connections.maximumCount
+          : boardStatisticsAfter.connections.incompleteCount;
+      int routedConnections = totalConnections - boardStatisticsAfter.connections.incompleteCount;
+      long elapsedMs = java.time.Duration.between(this.sessionStartTime, Instant.now()).toMillis();
 
-        // Console progress output for CLI
-        System.out.println(String.format("[Pass %d/%d] %d/%d connections routed, %d traces, %d vias, %.1fs elapsed",
-            currentPass, this.settings.maxPasses, routed, total,
-            boardStatisticsAfter.traces.totalCount, boardStatisticsAfter.vias.totalCount, elapsedMs / 1000.0));
+      // Console progress output (useful in both GUI and CLI modes)
+      System.out.println(String.format("[Pass %d/%d] %d/%d connections routed, %d traces, %d vias, %.1fs elapsed",
+          currentPass, this.settings.maxPasses, routedConnections, totalConnections,
+          boardStatisticsAfter.traces.totalCount, boardStatisticsAfter.vias.totalCount, elapsedMs / 1000.0));
 
-        // Fire progress event for listeners
-        fireProgressEvent(new app.freerouting.autoroute.events.ProgressEvent(
-            this, currentPass, this.settings.maxPasses, routed, total,
-            boardStatisticsAfter.traces.totalCount, boardStatisticsAfter.vias.totalCount,
-            elapsedMs, "routing"));
+      // Fire progress event for listeners
+      fireProgressEvent(new app.freerouting.autoroute.events.ProgressEvent(
+          this, currentPass, this.settings.maxPasses, routedConnections, totalConnections,
+          boardStatisticsAfter.traces.totalCount, boardStatisticsAfter.vias.totalCount,
+          elapsedMs, "routing"));
 
-        // Early stopping logic
-        if (boardScoreAfter > bestScoreSoFar + CLI_SIGNIFICANT_IMPROVEMENT_THRESHOLD) {
-          bestScoreSoFar = boardScoreAfter;
-          passesWithoutImprovement = 0;
-        } else {
-          passesWithoutImprovement++;
-        }
+      // Early stopping logic (primarily for CLI mode with reasonable maxPasses)
+      if (boardScoreAfter > bestScoreSoFar + CLI_SIGNIFICANT_IMPROVEMENT_THRESHOLD) {
+        bestScoreSoFar = boardScoreAfter;
+        passesWithoutImprovement = 0;
+      } else {
+        passesWithoutImprovement++;
+      }
 
-        if (passesWithoutImprovement >= CLI_MAX_PASSES_WITHOUT_IMPROVEMENT && currentPass >= STOP_AT_PASS_MINIMUM) {
-          job.logInfo("Early stopping: no significant improvement for " + passesWithoutImprovement + " passes");
-          thread.request_stop_auto_router();
-        }
+      if (passesWithoutImprovement >= CLI_MAX_PASSES_WITHOUT_IMPROVEMENT
+          && currentPass >= STOP_AT_PASS_MINIMUM
+          && this.settings.maxPasses <= 100) {
+        job.logInfo("Early stopping: no significant improvement for " + passesWithoutImprovement + " passes");
+        thread.request_stop_auto_router();
       }
 
       if (this.settings.save_intermediate_stages) {
